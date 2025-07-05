@@ -19,64 +19,73 @@ import java.util.stream.IntStream;
 @Service
 public class CalculadoraEmprestimoServiceImpl implements CalculadoraEmprestimoService {
 
+    private static final int BASE_DIAS_ANO = 360;
+
     @Override
     public List<SimulacaoResponse> calcular(SimulacaoRequest request) {
-        return calcularParcelas(request);
+        validarRegras(request);
+        return montarGrade(request);
     }
 
-    private static List<SimulacaoResponse> calcularParcelas(SimulacaoRequest request) {
-        List<LocalDate> datasParcelas = gerarDatasParcelas(request.getPrimeiroPagamento(), request.getDataFinal());
-        Set<LocalDate> datasRelevantes = gerarDatasParaExibicao (request.getDataInicial(), request.getDataFinal(), datasParcelas);
-        BigDecimal valorParcela = calcularValorParcela(
-                request.getValorEmprestimo(),
-                request.getTaxaJuros(),
-                datasParcelas.size()
-        );
+    private void validarRegras(SimulacaoRequest req) {
+        if (!req.dataFinal().isAfter(req.dataInicial())) {
+            throw new IllegalArgumentException("A data final deve ser maior que a data inicial.");
+        }
+        if (req.primeiroPagamento().isBefore(req.dataInicial()) || req.primeiroPagamento().isAfter(req.dataFinal())) {
+            throw new IllegalArgumentException("O primeiro pagamento deve estar entre a data inicial e a data final.");
+        }
+        if (req.taxaJuros().compareTo(BigDecimal.ZERO) <= 0) {
+            throw new IllegalArgumentException("A taxa de juros deve ser maior que zero.");
+        }
+    }
 
-        return datasRelevantes.stream()
-                .map(data -> new SimulacaoResponse(data, datasParcelas.contains(data) ? valorParcela : BigDecimal.ZERO))
-                .sorted(Comparator.comparing(SimulacaoResponse::getData))
+    private List<SimulacaoResponse> montarGrade(SimulacaoRequest req) {
+        List<LocalDate> parcelas = gerarDatasDeParcela(req.primeiroPagamento(), req.dataFinal());
+        if (!parcelas.contains(req.dataFinal())) {
+            throw new IllegalArgumentException("A data final precisa coincidir com um vencimento de parcela.");
+        }
+        Set<LocalDate> datasParaExibicao = gerarDatasParaExibicao(req.dataInicial(), req.dataFinal(), parcelas);
+        BigDecimal valorParcela = calcularValorParcela(req.valorEmprestimo(), req.taxaJuros(), parcelas.size());
+
+        return datasParaExibicao.stream()
+                .map(data -> new SimulacaoResponse(data, parcelas.contains(data) ? valorParcela : BigDecimal.ZERO))
+                .sorted(Comparator.comparing(SimulacaoResponse::data))
                 .collect(Collectors.toList());
     }
 
-    private static Set<LocalDate> gerarDatasParaExibicao (LocalDate dataInicial, LocalDate dataFinal, List<LocalDate> datasParcelas) {
+    private Set<LocalDate> gerarDatasParaExibicao(LocalDate inicio, LocalDate fim, List<LocalDate> parcelas) {
         Set<LocalDate> datas = new TreeSet<>();
-        datas.add(dataInicial);
-        datas.add(dataFinal);
+        datas.add(inicio);
+        datas.add(fim);
 
-        int totalDeMeses = YearMonth.from(dataFinal).compareTo(YearMonth.from(dataInicial));
-        datas.addAll(
-                IntStream.rangeClosed(0, totalDeMeses)
-                        .mapToObj(i -> dataInicial.plusMonths(i).withDayOfMonth(dataInicial.plusMonths(i).lengthOfMonth()))
-                        .filter(data -> !data.isAfter(dataFinal))
-                        .collect(Collectors.toSet())
-        );
+        int meses = YearMonth.from(fim).compareTo(YearMonth.from(inicio));
+        datas.addAll(IntStream.rangeClosed(0, meses)
+                .mapToObj(mesIndice -> inicio.plusMonths(mesIndice).withDayOfMonth(inicio.plusMonths(mesIndice).lengthOfMonth()))
+                .filter(data -> !data.isAfter(fim))
+                .collect(Collectors.toSet()));
 
-        datas.addAll(datasParcelas);
+        datas.addAll(parcelas);
         return datas;
     }
 
-    private static List<LocalDate> gerarDatasParcelas(LocalDate primeiroPagamento, LocalDate dataFinal) {
-        int totalDeMeses = YearMonth.from(dataFinal).compareTo(YearMonth.from(primeiroPagamento));
-        return IntStream.rangeClosed(0, totalDeMeses)
-                .mapToObj(i -> {
-                    YearMonth mes = YearMonth.from(primeiroPagamento).plusMonths(i);
-                    int dia = Math.min(primeiroPagamento.getDayOfMonth(), mes.lengthOfMonth());
-                    return LocalDate.of(mes.getYear(), mes.getMonth(), dia);
+    private List<LocalDate> gerarDatasDeParcela(LocalDate primeiroPagamento, LocalDate fim) {
+        int mesesEntre = YearMonth.from(fim).compareTo(YearMonth.from(primeiroPagamento));
+        return IntStream.rangeClosed(0, mesesEntre)
+                .mapToObj(mesIndice -> {
+                    YearMonth referencia = YearMonth.from(primeiroPagamento).plusMonths(mesIndice);
+                    int diaVencimento = Math.min(primeiroPagamento.getDayOfMonth(), referencia.lengthOfMonth());
+                    return LocalDate.of(referencia.getYear(), referencia.getMonth(), diaVencimento);
                 })
-                .filter(data -> !data.isAfter(dataFinal))
+                .filter(data -> !data.isAfter(fim))
                 .collect(Collectors.toList());
     }
 
-    private static BigDecimal calcularValorParcela(BigDecimal valor, BigDecimal taxaMensal, int parcelas) {
-        if (parcelas == 0) {
-            return BigDecimal.ZERO;
-        }
+    private BigDecimal calcularValorParcela(BigDecimal principal, BigDecimal taxaMensal, int quantidadeParcelas) {
 
-        BigDecimal juros = BigDecimal.ONE.add(taxaMensal);
-        BigDecimal potencia = BigDecimal.ONE.divide(juros.pow(parcelas), 10, RoundingMode.HALF_EVEN);
-        BigDecimal divisor = BigDecimal.ONE.subtract(potencia);
+        BigDecimal fatorJuros = BigDecimal.ONE.add(taxaMensal);
+        BigDecimal fatorDesconto = BigDecimal.ONE.divide(fatorJuros.pow(quantidadeParcelas), 10, RoundingMode.HALF_EVEN);
+        BigDecimal denominador = BigDecimal.ONE.subtract(fatorDesconto);
 
-        return valor.multiply(taxaMensal).divide(divisor, 2, RoundingMode.HALF_EVEN);
+        return principal.multiply(taxaMensal).divide(denominador, 2, RoundingMode.HALF_EVEN);
     }
 }
