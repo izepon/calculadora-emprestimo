@@ -1,4 +1,3 @@
-// src/main/java/com/izepon/calculadora_emprestimo/service/impl/CalculadoraEmprestimoServiceImpl.java
 package com.izepon.calculadora_emprestimo.service.impl;
 
 import com.izepon.calculadora_emprestimo.dto.SimulacaoRequest;
@@ -40,7 +39,7 @@ public class CalculadoraEmprestimoServiceImpl implements CalculadoraEmprestimoSe
         int indiceParcela = 0;
 
         List<SimulacaoResponse> resultados = new ArrayList<>();
-        for (LocalDate dataCompetencia : datasExibicao.stream().sorted().collect(Collectors.toList())) {
+        for (LocalDate dataCompetencia : datasExibicao.stream().sorted().toList()) {
             boolean isDataDePagamento = datasDeParcela.contains(dataCompetencia);
 
             BigDecimal valorEmprestimoColuna = dataCompetencia.equals(request.dataInicial())
