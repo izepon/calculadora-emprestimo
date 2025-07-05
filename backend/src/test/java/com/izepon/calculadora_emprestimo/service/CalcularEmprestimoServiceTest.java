@@ -39,7 +39,7 @@ public class CalcularEmprestimoServiceTest {
         List<SimulacaoResponse> resultado = service.calcular(request);
 
         Assertions.assertFalse(resultado.isEmpty());
-        Assertions.assertTrue(resultado.stream().anyMatch(p -> p.valor().compareTo(BigDecimal.ZERO) > 0));
+        Assertions.assertTrue(resultado.stream().anyMatch(response -> response.total().compareTo(BigDecimal.ZERO) > 0));
     }
 
     @Test
@@ -88,7 +88,7 @@ public class CalcularEmprestimoServiceTest {
                 TAXA_JUROS);
 
         List<SimulacaoResponse> resultado = service.calcular(request);
-        Assertions.assertTrue(resultado.stream().allMatch(response -> response.valor().compareTo(BigDecimal.ZERO) == 0));
+        Assertions.assertTrue(resultado.stream().allMatch(response -> response.total().compareTo(BigDecimal.ZERO) == 0));
     }
 
     @Test

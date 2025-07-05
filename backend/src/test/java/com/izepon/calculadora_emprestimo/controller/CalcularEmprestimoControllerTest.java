@@ -17,7 +17,6 @@ import java.time.LocalDate;
 import java.util.Collections;
 import java.util.List;
 
-import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -30,7 +29,7 @@ public class CalcularEmprestimoControllerTest {
     private static final LocalDate DATA_PRIMEIRO_PAGAMENTO = LocalDate.of(2024, 1, 31);
     private static final BigDecimal VALOR_EMPRESTIMO = new BigDecimal("10000");
     private static final BigDecimal TAXA_JUROS = new BigDecimal("0.02");
-    private static final String VALOR_PRIMEIRO_PAGAMENTO = "927.01";
+    private static final String VALOR_PARCELA = "927.01";
     private static final String INVALID_BODY_JSON = "{ \"dataInicial\": \"2024-01-01\" }";
     private static final String URL_TESTE = "/api/calculadora-emprestimo/calcular";
 
@@ -52,8 +51,7 @@ public class CalcularEmprestimoControllerTest {
                 VALOR_EMPRESTIMO,
                 TAXA_JUROS
         );
-
-        when(service.calcular(Mockito.eq(request))).thenReturn(Collections.emptyList());
+        Mockito.when(service.calcular(Mockito.eq(request))).thenReturn(Collections.emptyList());
 
         mockMvc.perform(post(URL_TESTE)
                         .contentType(MediaType.APPLICATION_JSON)
@@ -71,20 +69,39 @@ public class CalcularEmprestimoControllerTest {
                 VALOR_EMPRESTIMO,
                 TAXA_JUROS
         );
-
-        List<SimulacaoResponse> responseList = List.of(
-                new SimulacaoResponse(DATA_INICIAL, BigDecimal.ZERO),
-                new SimulacaoResponse(DATA_PRIMEIRO_PAGAMENTO, new BigDecimal(VALOR_PRIMEIRO_PAGAMENTO))
+        SimulacaoResponse primeiraLinha = new SimulacaoResponse(
+                DATA_INICIAL,
+                VALOR_EMPRESTIMO,
+                BigDecimal.ZERO,
+                "",
+                BigDecimal.ZERO,
+                BigDecimal.ZERO,
+                VALOR_EMPRESTIMO,
+                BigDecimal.ZERO,
+                BigDecimal.ZERO,
+                BigDecimal.ZERO
         );
-
-        when(service.calcular(Mockito.eq(request))).thenReturn(responseList);
+        SimulacaoResponse segundaLinha = new SimulacaoResponse(
+                DATA_PRIMEIRO_PAGAMENTO,
+                BigDecimal.ZERO,
+                VALOR_EMPRESTIMO,
+                "1/11",
+                new BigDecimal(VALOR_PARCELA),
+                BigDecimal.ZERO,
+                BigDecimal.ZERO,
+                BigDecimal.ZERO,
+                BigDecimal.ZERO,
+                new BigDecimal(VALOR_PARCELA)
+        );
+        List<SimulacaoResponse> lista = List.of(primeiraLinha, segundaLinha);
+        Mockito.when(service.calcular(Mockito.eq(request))).thenReturn(lista);
 
         mockMvc.perform(post(URL_TESTE)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$").isArray())
-                .andExpect(jsonPath("$[1].valor").value(VALOR_PRIMEIRO_PAGAMENTO));
+                .andExpect(jsonPath("$[1].total").value(VALOR_PARCELA));
     }
 
     @Test
@@ -95,3 +112,4 @@ public class CalcularEmprestimoControllerTest {
                 .andExpect(status().isBadRequest());
     }
 }
+
