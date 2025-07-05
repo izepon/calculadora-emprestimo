@@ -19,7 +19,7 @@ import java.util.List;
 public class CalcularEmprestimoServiceTest {
 
     private static final LocalDate DATA_INICIAL          = LocalDate.of(2024, 1, 1);
-    private static final LocalDate DATA_FINAL            = LocalDate.of(2024, 12, 31); // precisa ser data de parcela
+    private static final LocalDate DATA_FINAL            = LocalDate.of(2024, 12, 31);
     private static final LocalDate PRIMEIRO_PAGAMENTO    = LocalDate.of(2024, 1, 31);
     private static final BigDecimal VALOR_EMPRESTIMO     = new BigDecimal("10000");
     private static final BigDecimal TAXA_JUROS           = new BigDecimal("0.02");
@@ -88,7 +88,7 @@ public class CalcularEmprestimoServiceTest {
                 TAXA_JUROS);
 
         List<SimulacaoResponse> resultado = service.calcular(request);
-        Assertions.assertTrue(resultado.stream().allMatch(p -> p.valor().compareTo(BigDecimal.ZERO) == 0));
+        Assertions.assertTrue(resultado.stream().allMatch(response -> response.valor().compareTo(BigDecimal.ZERO) == 0));
     }
 
     @Test
