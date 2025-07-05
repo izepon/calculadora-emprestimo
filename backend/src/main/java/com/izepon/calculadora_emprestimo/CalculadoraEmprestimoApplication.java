@@ -1,4 +1,4 @@
-package com.example.calculadora_emprestimo;
+package com.izepon.calculadora_emprestimo;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
