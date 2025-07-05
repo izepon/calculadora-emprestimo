@@ -27,25 +27,28 @@ public class CalculadoraEmprestimoServiceImpl implements CalculadoraEmprestimoSe
         return montarGrade(request);
     }
 
-    private void validarRegras(SimulacaoRequest req) {
-        if (!req.dataFinal().isAfter(req.dataInicial())) {
+    private void validarRegras(SimulacaoRequest request) {
+        if (!request.dataFinal().isAfter(request.dataInicial())) {
             throw new IllegalArgumentException("A data final deve ser maior que a data inicial.");
         }
-        if (req.primeiroPagamento().isBefore(req.dataInicial()) || req.primeiroPagamento().isAfter(req.dataFinal())) {
+        if (request.primeiroPagamento().isBefore(request.dataInicial()) || request.primeiroPagamento().isAfter(request.dataFinal())) {
             throw new IllegalArgumentException("O primeiro pagamento deve estar entre a data inicial e a data final.");
         }
-        if (req.taxaJuros().compareTo(BigDecimal.ZERO) <= 0) {
+        if (request.taxaJuros().compareTo(BigDecimal.ZERO) <= 0) {
             throw new IllegalArgumentException("A taxa de juros deve ser maior que zero.");
         }
     }
 
-    private List<SimulacaoResponse> montarGrade(SimulacaoRequest req) {
-        List<LocalDate> parcelas = gerarDatasDeParcela(req.primeiroPagamento(), req.dataFinal());
-        if (!parcelas.contains(req.dataFinal())) {
+    private List<SimulacaoResponse> montarGrade(SimulacaoRequest request) {
+        List<LocalDate> parcelas = gerarDatasDeParcela(request.primeiroPagamento(), request.dataFinal());
+        if (!parcelas.contains(request.dataFinal())) {
             throw new IllegalArgumentException("A data final precisa coincidir com um vencimento de parcela.");
         }
-        Set<LocalDate> datasParaExibicao = gerarDatasParaExibicao(req.dataInicial(), req.dataFinal(), parcelas);
-        BigDecimal valorParcela = calcularValorParcela(req.valorEmprestimo(), req.taxaJuros(), parcelas.size());
+        Set<LocalDate> datasParaExibicao = gerarDatasParaExibicao(request.dataInicial(), request.dataFinal(), parcelas);
+        BigDecimal taxaAnual  = request.taxaJuros();
+        BigDecimal taxaMensal = taxaAnual.multiply(BigDecimal.valueOf(30)).divide(BigDecimal.valueOf(BASE_DIAS_ANO), 10, RoundingMode.HALF_EVEN);
+
+        BigDecimal valorParcela = calcularValorParcela(request.valorEmprestimo(), taxaMensal, parcelas.size());
 
         return datasParaExibicao.stream()
                 .map(data -> new SimulacaoResponse(data, parcelas.contains(data) ? valorParcela : BigDecimal.ZERO))
@@ -69,8 +72,8 @@ public class CalculadoraEmprestimoServiceImpl implements CalculadoraEmprestimoSe
     }
 
     private List<LocalDate> gerarDatasDeParcela(LocalDate primeiroPagamento, LocalDate fim) {
-        int mesesEntre = YearMonth.from(fim).compareTo(YearMonth.from(primeiroPagamento));
-        return IntStream.rangeClosed(0, mesesEntre)
+        int meses = YearMonth.from(fim).compareTo(YearMonth.from(primeiroPagamento));
+        return IntStream.rangeClosed(0, meses)
                 .mapToObj(mesIndice -> {
                     YearMonth referencia = YearMonth.from(primeiroPagamento).plusMonths(mesIndice);
                     int diaVencimento = Math.min(primeiroPagamento.getDayOfMonth(), referencia.lengthOfMonth());
