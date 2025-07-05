@@ -163,6 +163,22 @@ public class CalculadoraEmprestimoServiceImpl implements CalculadoraEmprestimoSe
         return gerarSimulacao(request);
     }
 
+    private void validarRegras(SimulacaoRequest request) {
+        if (!request.dataFinal().isAfter(request.dataInicial())) {
+            throw new IllegalArgumentException("A data final deve ser maior que a data inicial.");
+        }
+        if (request.primeiroPagamento().isBefore(request.dataInicial())
+                || request.primeiroPagamento().isAfter(request.dataFinal())) {
+            throw new IllegalArgumentException("O primeiro pagamento deve estar entre a data inicial e a data final (inclusive).");
+        }
+        if (request.taxaJuros().compareTo(BigDecimal.ZERO) <= 0) {
+            throw new IllegalArgumentException("A taxa de juros deve ser maior que zero.");
+        }
+        if (request.valorEmprestimo().compareTo(BigDecimal.ZERO) <= 0) {
+            throw new IllegalArgumentException("O valor do empréstimo deve ser maior que zero.");
+        }
+    }
+
     private List<SimulacaoResponse> gerarSimulacao(SimulacaoRequest request) {
         List<LocalDate> datasDeParcela = gerarDatasDeParcela(request.primeiroPagamento(), request.dataFinal());
         Set<LocalDate> datasExibicaoSet = gerarDatasParaExibicao(request.dataInicial(), request.dataFinal(), datasDeParcela);
@@ -235,22 +251,6 @@ public class CalculadoraEmprestimoServiceImpl implements CalculadoraEmprestimoSe
             dataAnterior = dataCompetencia;
         }
         return resultados;
-    }
-
-    private void validarRegras(SimulacaoRequest request) {
-        if (!request.dataFinal().isAfter(request.dataInicial())) {
-            throw new IllegalArgumentException("A data final deve ser maior que a data inicial.");
-        }
-        if (request.primeiroPagamento().isBefore(request.dataInicial())
-                || request.primeiroPagamento().isAfter(request.dataFinal())) {
-            throw new IllegalArgumentException("O primeiro pagamento deve estar entre a data inicial e a data final (inclusive).");
-        }
-        if (request.taxaJuros().compareTo(BigDecimal.ZERO) <= 0) {
-            throw new IllegalArgumentException("A taxa de juros deve ser maior que zero.");
-        }
-        if (request.valorEmprestimo().compareTo(BigDecimal.ZERO) <= 0) {
-            throw new IllegalArgumentException("O valor do empréstimo deve ser maior que zero.");
-        }
     }
 
     private List<LocalDate> gerarDatasDeParcela(LocalDate dataPrimeiroPagamento, LocalDate dataFinal) {
