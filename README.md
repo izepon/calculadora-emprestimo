@@ -111,7 +111,7 @@ Este projeto implementa uma API de cálculo de parcelas de empréstimo (backend 
 
 ## 🚀 Testando com Postman
 
-1. Abra o Postman e importe a collection **Calculadora Emprestimo API.postman\_collection.json** (está na raiz do projeto).
+1. Abra o Postman e importe a collection baixando aqui **[Calculadora Emprestimo API.postman\_collection.json](https://github.com/user-attachments/files/21083972/Calculadora.Emprestimo.API.postman_collection.json)** 
 2. Certifique-se de que a URL base (`http://localhost:8080`) esteja correta.
 3. Execute a requisição **Calcular Empréstimo - Válido** para ver um exemplo.
 
@@ -151,9 +151,11 @@ calculadora-emprestimos/
 
 ## 🗂️ Funcionalidades do Projeto
 
-– O design da tela é simples e intuitivo, exibindo os campos de entrada do formulário. Os campos obrigatórios são destacados, e o botão Calcular Empréstimo só fica habilitado quando todos estão preenchidos corretamente.
-- Após o cálculo, os valores da simulação são exibidos na tela e, em seguida, é possível baixar a projeção em PDF.
+–  O design da tela é simples e intuitivo, exibindo os campos de entrada do formulário. Os campos obrigatórios são destacados, e o botão Calcular Empréstimo só fica habilitado quando todos estão preenchidos corretamente.
+-  Após o cálculo, os valores da simulação são exibidos na tela e, em seguida, é possível baixar a projeção em PDF.
 
+![image](https://github.com/user-attachments/assets/7ea20db1-007e-47ad-907e-453f5ddfa36e)
+![image](https://github.com/user-attachments/assets/7a029265-112d-4873-bb47-f37052782630)
 
 
 ---
@@ -165,3 +167,7 @@ calculadora-emprestimos/
 * [Postman Collections](https://learning.postman.com/docs/getting-started/importing-and-exporting-data/)
 
 ---
+
+© [2025] [Jean Carlos Izepon]. Todos os direitos reservados.
+
+Distribuído sob a Licença MIT. Consulte o arquivo LICENSE para mais detalhes.
