@@ -1,8 +1,10 @@
 # Calculadora de Empréstimo
 
 Este projeto implementa uma API de cálculo de parcelas de empréstimo (backend em Spring Boot) e uma interface web em React (frontend) para consumir essa API.
-O design da tela é simples e intuitivo, exibindo os campos de entrada do formulário. Os campos obrigatórios são destacados, e o botão Calcular Empréstimo só fica habilitado quando todos estão preenchidos corretamente.
-Após o cálculo, os valores da simulação são exibidos na tela e, em seguida, é possível baixar a projeção em PDF.
+
+- O design da tela é simples e intuitivo, exibindo os campos de entrada do formulário. Os campos obrigatórios são destacados, e o botão Calcular Empréstimo só fica habilitado quando todos estão preenchidos corretamente.
+
+- Após o cálculo, os valores da simulação são exibidos na tela e, em seguida, é possível baixar a projeção em PDF.
 
 ![image](https://github.com/user-attachments/assets/7ea20db1-007e-47ad-907e-453f5ddfa36e)
 ![image](https://github.com/user-attachments/assets/7a029265-112d-4873-bb47-f37052782630)
